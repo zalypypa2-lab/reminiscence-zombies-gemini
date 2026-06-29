@@ -1,0 +1,117 @@
+-- Delta X No-GUI Compatibility Boot
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local zombieHighlights = {}
+local partHighlights = {}
+local worldHighlights = {}
+
+-- Safe Minimalist ESP Engine (Uses pure game objects, bypassing CoreGui restrictions)
+local function createESP(object, color, nameText)
+    if not object or not object:Parent then return end
+    if object:FindFirstChild("ESP_Highlight") then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESP_Highlight"
+    highlight.FillColor = color
+    highlight.FillTransparency = 0.4
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 0.1
+    highlight.Parent = object
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ESP_Billboard"
+    billboard.Size = UDim2.new(0, 80, 0, 25)
+    billboard.AlwaysOnTop = true
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.Parent = object
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = color
+    label.TextSize = 12
+    label.Text = nameText
+    label.Font = Enum.Font.SourceSansBold
+    label.Parent = billboard
+
+    return {highlight, billboard}
+end
+
+-- 1. AUTOMATIC ZOMBIE ESP (Red)
+task.spawn(function()
+    while task.wait(1.5) do
+        for _, obj in pairs(workspace:GetChildren()) do
+            if obj:IsA("Model") and (obj:FindFirstChild("Humanoid") or string.find(string.lower(obj.Name), "zombie")) and obj ~= LocalPlayer.Character then
+                if not zombieHighlights[obj] and obj:FindFirstChild("HumanoidRootPart") then
+                    zombieHighlights[obj] = createESP(obj, Color3.fromRGB(255, 0, 0), "Zombie")
+                end
+            end
+        end
+    end
+end)
+
+-- 2. AUTOMATIC CRAFT PARTS ESP (Cyan)
+task.spawn(function()
+    while task.wait(2.5) do
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") or obj:IsA("Model") then
+                local lowerName = string.lower(obj.Name)
+                if string.find(lowerName, "part") or string.find(lowerName, "craft") or string.find(lowerName, "component") then
+                    if not partHighlights[obj] then
+                        partHighlights[obj] = createESP(obj, Color3.fromRGB(0, 255, 255), "Part")
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- 3. AUTOMATIC MACHINES & MYSTERY BOX ESP (Yellow & Green)
+task.spawn(function()
+    while task.wait(3.5) do
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("Model") or obj:IsA("BasePart") then
+                local lowerName = string.lower(obj.Name)
+                local color = nil
+                local text = ""
+
+                if string.find(lowerName, "box") or string.find(lowerName, "mystery") then
+                    color = Color3.fromRGB(255, 255, 0)
+                    text = "Mystery Box"
+                elseif string.find(lowerName, "perk") or string.find(lowerName, "cola") or string.find(lowerName, "soda") then
+                    color = Color3.fromRGB(0, 255, 0)
+                    text = "Perk Machine"
+                end
+
+                if color and not worldHighlights[obj] then
+                    worldHighlights[obj] = createESP(obj, color, text)
+                end
+            end
+        end
+    end
+end)
+
+-- 4. AUTOMATIC INFINITE AMMO LOOP (Runs safely in the background every 5 seconds)
+task.spawn(function()
+    while task.wait(5) do
+        pcall(function()
+            for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do
+                if v:IsA("Tool") and (v:FindFirstChild("Ammo") or v:FindFirstChild("Clip")) then
+                    if v:FindFirstChild("Ammo") then v.Ammo.Value = 999 end
+                    if v:FindFirstChild("Clip") then v.Clip.Value = 999 end
+                end
+            end
+            if LocalPlayer.Character then
+                for _, v in pairs(LocalPlayer.Character:GetChildren()) do
+                    if v:IsA("Tool") and (v:FindFirstChild("Ammo") or v:FindFirstChild("Clip")) then
+                        if v:FindFirstChild("Ammo") then v.Ammo.Value = 999 end
+                        if v:FindFirstChild("Clip") then v.Clip.Value = 999 end
+                    end
+                end
+            end
+        end)
+    end
+end)
