@@ -3,68 +3,212 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 
 if not PlayerGui then return end
 
-if PlayerGui:FindFirstChild("ZombieAttackGUI") then
-    PlayerGui.ZombieAttackGUI:Destroy()
+if PlayerGui:FindFirstChild("GeminiAuraPremium") then
+    PlayerGui.GeminiAuraPremium:Destroy()
 end
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ZombieAttackGUI"
+ScreenGui.Name = "GeminiAuraPremium"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false
 ScreenGui.DisplayOrder = 999999
 
-local AttackButton = Instance.new("TextButton")
-AttackButton.Size = UDim2.new(0, 160, 0, 45)
-AttackButton.Position = UDim2.new(0.5, -80, 0.85, 0)
-AttackButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-AttackButton.TextColor3 = Color3.fromRGB(255, 80, 80)
-AttackButton.Text = "Attack: OFF"
-AttackButton.Font = Enum.Font.GothamBold
-AttackButton.TextSize = 16
-AttackButton.Parent = ScreenGui
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 130, 0, 35)
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(25, 5, 5)
+ToggleBtn.TextColor3 = Color3.fromRGB(220, 20, 20)
+ToggleBtn.Text = "† Aura †"
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 15
+ToggleBtn.Parent = ScreenGui
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 4)
+Instance.new("UIStroke", ToggleBtn).Color = Color3.fromRGB(180, 0, 0)
+ToggleBtn.UIStroke.Thickness = 2
 
-Instance.new("UICorner", AttackButton).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", AttackButton).Color = Color3.fromRGB(150, 40, 40)
-AttackButton.UIStroke.Thickness = 2
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 340, 0, 260)
+Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(15, 2, 2)
+Frame.Visible = true
+Frame.Active = true
+Frame.Parent = ScreenGui
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+Instance.new("UIStroke", Frame).Color = Color3.fromRGB(160, 0, 0)
+Frame.UIStroke.Thickness = 2.5
 
-local Toggle = false
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 38)
+TopBar.BackgroundColor3 = Color3.fromRGB(30, 5, 5)
+TopBar.Parent = Frame
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 6)
+Instance.new("UIStroke", TopBar).Color = Color3.fromRGB(200, 0, 0)
+TopBar.UIStroke.Thickness = 1.5
 
-AttackButton.MouseButton1Click:Connect(function()
-    Toggle = not Toggle
-    if Toggle then
-        AttackButton.BackgroundColor3 = Color3.fromRGB(15, 40, 15)
-        AttackButton.TextColor3 = Color3.fromRGB(70, 255, 70)
-        AttackButton.UIStroke.Color = Color3.fromRGB(30, 120, 30)
-        AttackButton.Text = "Attack: ON"
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -20, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "✠ GEMINI AURA V4 ✠"
+Title.TextColor3 = Color3.fromRGB(255, 50, 50)
+Title.TextSize = 15
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+local Glow = Instance.new("Frame")
+Glow.Size = UDim2.new(1, 0, 0, 2)
+Glow.Position = UDim2.new(0, 0, 1, -2)
+Glow.BackgroundColor3 = Color3.fromRGB(220, 0, 0)
+Glow.BorderSizePixel = 0
+Glow.Parent = TopBar
+
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then update(input) end
+end)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    Frame.Visible = not Frame.Visible
+end)
+
+local AuraBtn = Instance.new("TextButton")
+AuraBtn.Size = UDim2.new(1, -30, 0, 45)
+AuraBtn.Position = UDim2.new(0, 15, 0, 55)
+AuraBtn.BackgroundColor3 = Color3.fromRGB(35, 5, 5)
+AuraBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
+AuraBtn.Text = "KILL AURA : DISABLED"
+AuraBtn.Font = Enum.Font.GothamBold
+AuraBtn.TextSize = 13
+AuraBtn.Parent = Frame
+Instance.new("UICorner", AuraBtn).CornerRadius = UDim.new(0, 4)
+Instance.new("UIStroke", AuraBtn).Color = Color3.fromRGB(200, 0, 0)
+AuraBtn.UIStroke.Thickness = 1.5
+
+local LogLabel = Instance.new("TextLabel")
+LogLabel.Size = UDim2.new(1, -30, 0, 110)
+LogLabel.Position = UDim2.new(0, 15, 0, 110)
+LogLabel.BackgroundTransparency = 1
+LogLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+LogLabel.TextSize = 12
+LogLabel.Font = Enum.Font.Gotham
+LogLabel.TextXAlignment = Enum.TextXAlignment.Left
+LogLabel.TextYAlignment = Enum.TextYAlignment.Top
+LogLabel.Text = "Log: waiting..."
+LogLabel.TextWrapped = true
+LogLabel.Parent = Frame
+
+local killauraActive = false
+
+AuraBtn.MouseButton1Click:Connect(function()
+    killauraActive = not killauraActive
+    if killauraActive then
+        AuraBtn.BackgroundColor3 = Color3.fromRGB(50, 5, 5)
+        AuraBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+        AuraBtn.UIStroke.Color = Color3.fromRGB(0, 200, 0)
+        AuraBtn.Text = "KILL AURA : ENABLED"
+        LogLabel.Text = "Aura ON, searching..."
     else
-        AttackButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-        AttackButton.TextColor3 = Color3.fromRGB(255, 80, 80)
-        AttackButton.UIStroke.Color = Color3.fromRGB(150, 40, 40)
-        AttackButton.Text = "Attack: OFF"
+        AuraBtn.BackgroundColor3 = Color3.fromRGB(35, 5, 5)
+        AuraBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
+        AuraBtn.UIStroke.Color = Color3.fromRGB(200, 0, 0)
+        AuraBtn.Text = "KILL AURA : DISABLED"
+        LogLabel.Text = "Log: waiting..."
     end
 end)
 
 task.spawn(function()
-    while task.wait(0.15) do
-        if Toggle then
-            pcall(function()
-                for _, v in pairs(workspace.Zombies:GetChildren()) do
-                    if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                        game:GetService("Lighting").ETC:FireServer({
-                            v.Humanoid,
-                            math.huge,
-                            "Damage\240\159\144\153",
-                            false, false, false,
-                            [8] = vector.create(0,0,0),
-                            [9] = { HitS = 1, ConfirmedHit = 1 }
-                        })
+    while task.wait(0.2) do
+        if killauraActive then
+            local zombies = {}
+            local zombieNames = {}
+            local logText = ""
+
+            local function findZombiesIn(parent)
+                for _, obj in pairs(parent:GetChildren()) do
+                    if obj:IsA("Model") then
+                        local hum = obj:FindFirstChild("Humanoid")
+                        if hum and hum.Health > 0 then
+                            if not Players:GetPlayerFromCharacter(obj) then
+                                table.insert(zombies, obj)
+                                if #zombieNames < 3 then
+                                    table.insert(zombieNames, obj.Name)
+                                end
+                            end
+                        end
+                    end
+                    if obj:IsA("Folder") or obj:IsA("Model") then
+                        findZombiesIn(obj)
                     end
                 end
+            end
+
+            local zombiesFolder = workspace:FindFirstChild("Zombies")
+            if zombiesFolder then
+                findZombiesIn(zombiesFolder)
+            else
+                findZombiesIn(workspace)
+            end
+
+            if #zombies == 0 then
+                LogLabel.Text = "No zombies found!"
+                continue
+            end
+
+            logText = "Found: " .. #zombies .. " | " .. table.concat(zombieNames, ", ") .. "\n"
+
+            local success, err = pcall(function()
+                local v3
+                if typeof(vector) == "table" and vector.create then
+                    v3 = vector.create(0, 0, 0)
+                else
+                    v3 = {x = 0, y = 0, z = 0}
+                end
+                for _, zombie in pairs(zombies) do
+                    Lighting.ETC:FireServer({
+                        zombie.Humanoid,
+                        math.huge,
+                        "Damage\240\159\144\153",
+                        false,
+                        false,
+                        false,
+                        [8] = v3,
+                        [9] = { HitS = 1, ConfirmedHit = 1 }
+                    })
+                end
             end)
+
+            if not success then
+                logText = logText .. "FireServer error: " .. tostring(err)
+            else
+                logText = logText .. "Sent damage to " .. #zombies .. " zombies"
+            end
+
+            LogLabel.Text = logText
         end
     end
 end)
