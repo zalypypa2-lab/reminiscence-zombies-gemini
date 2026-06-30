@@ -6,40 +6,64 @@ local LocalPlayer = Players.LocalPlayer
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Gemini Hub";
-        Text = "Script Loaded Successfully!";
-        Duration = 5;
+        Text = "Advanced ESP Active!";
+        Duration = 4;
     })
 end)
 
-local function applyESP(model, color)
+local function applyESP(model, color, text)
     if not model or model:FindFirstChild("Gemini_ESP") then return end
+    
+    local folder = Instance.new("Folder")
+    folder.Name = "Gemini_ESP"
+    folder.Parent = model
+
     local highlight = Instance.new("Highlight")
-    highlight.Name = "Gemini_ESP"
     highlight.FillColor = color
-    highlight.FillTransparency = 0.5
+    highlight.FillTransparency = 0.4
     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-    highlight.OutlineTransparency = 0.2
-    highlight.Parent = model
+    highlight.OutlineTransparency = 0.1
+    highlight.Parent = folder
+
+    local bbg = Instance.new("BillboardGui")
+    bbg.Size = UDim2.new(0, 100, 0, 25)
+    bbg.AlwaysOnTop = true
+    bbg.StudsOffset = Vector3.new(0, 3, 0)
+    bbg.Parent = folder
+
+    local txt = Instance.new("TextLabel")
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.BackgroundTransparency = 1
+    txt.TextColor3 = color
+    txt.TextSize = 12
+    txt.Text = text
+    txt.Font = Enum.Font.SourceSansBold
+    txt.Parent = bbg
 end
 
 task.spawn(function()
-    while task.wait(2) do
+    while task.wait(1.5) do
         pcall(function()
-            for _, obj in pairs(workspace:GetChildren()) do
-                if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj ~= LocalPlayer.Character then
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("Head") and obj ~= LocalPlayer.Character then
                     if not Players:GetPlayerFromCharacter(obj) then
-                        applyESP(obj, Color3.fromRGB(255, 0, 0))
+                        applyESP(obj, Color3.fromRGB(255, 0, 0), "ZOMBIE")
                     end
                 end
-            end
-            
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("Model") or obj:IsA("BasePart") then
-                    local name = string.lower(obj.Name)
-                    if string.find(name, "box") or string.find(name, "mystery") then
-                        applyESP(obj, Color3.fromRGB(255, 255, 0))
-                    elseif string.find(name, "perk") or string.find(name, "cola") then
-                        applyESP(obj, Color3.fromRGB(0, 255, 0))
+                
+                if obj:IsA("ProximityPrompt") or obj:IsA("ClickDetector") then
+                    local target = obj.Parent
+                    if target and (target:IsA("Model") or target:IsA("BasePart")) then
+                        local name = string.lower(target.Name)
+                        local promptText = obj:IsA("ProximityPrompt") and string.lower(obj.ObjectText .. obj.ActionText) or ""
+                        
+                        if string.find(name, "box") or string.find(name, "mystery") or string.find(promptText, "box") or string.find(promptText, "mystery") then
+                            applyESP(target, Color3.fromRGB(255, 255, 0), "Mystery Box")
+                        elseif string.find(name, "perk") or string.find(name, "cola") or string.find(name, "soda") or string.find(promptText, "perk") or string.find(promptText, "buy") then
+                            applyESP(target, Color3.fromRGB(0, 255, 0), "Perk Machine")
+                        elseif string.find(name, "part") or string.find(name, "craft") or string.find(name, "component") or string.find(promptText, "part") or string.find(promptText, "craft") or string.find(promptText, "take") then
+                            applyESP(target, Color3.fromRGB(0, 255, 255), "Craft Part")
+                        end
                     end
                 end
             end
@@ -48,7 +72,7 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-    while task.wait(2) do
+    while task.wait(1.5) do
         pcall(function()
             for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
                 if tool:IsA("Tool") then
@@ -68,7 +92,7 @@ task.spawn(function()
                             if val:IsA("IntValue") or val:IsA("NumberValue") then
                                 if string.find(string.lower(val.Name), "ammo") or string.find(string.lower(val.Name), "clip") then
                                     val.Value = 999
-                               end
+                                end
                             end
                         end
                     end
