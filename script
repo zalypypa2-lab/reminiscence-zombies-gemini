@@ -102,13 +102,26 @@ local function createToggle(name, callback)
     end)
 end
 
+-- Новая плавная 3D обводка (Не лагает)
 local function applyVisualESP(object, color, text)
     if not object or object:FindFirstChild("Gemini_ESP_Root") then return end
     
+    -- Проверка высоты (если объект глубоко под картой — игнорируем)
+    local position = object:IsA("Model") and (object.PrimaryPart and object.PrimaryPart.Position) or (object:IsA("BasePart") and object.Position)
+    if position and position.Y < -50 then return end
+
     local root = Instance.new("Folder")
     root.Name = "Gemini_ESP_Root"
     root.Parent = object
     table.insert(createdESPElements, root)
+
+    -- Неоновый контур вокруг всей модели
+    local box = Instance.new("SelectionBox")
+    box.Adornee = object
+    box.Color3 = color
+    box.LineThickness = 0.05
+    box.SurfaceTransparency = 0.8
+    box.Parent = root
 
     local bbg = Instance.new("BillboardGui")
     bbg.Name = "Gemini_Billboard"
@@ -127,19 +140,6 @@ local function applyVisualESP(object, color, text)
     txt.TextStrokeTransparency = 0
     txt.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
     txt.Parent = bbg
-
-    local boxBbg = Instance.new("BillboardGui")
-    boxBbg.Name = "Gemini_Box"
-    boxBbg.Size = UDim2.new(3, 0, 4, 0)
-    boxBbg.AlwaysOnTop = true
-    boxBbg.Parent = root
-
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, 0, 1, 0)
-    frame.BackgroundTransparency = 1
-    frame.BorderColor3 = color
-    frame.BorderSizePixel = 2
-    frame.Parent = boxBbg
 end
 
 local function clearESP()
@@ -164,15 +164,15 @@ createToggle("Craft Parts ESP", function(val)
     if not partsESP then clearESP() end
 end)
 
+-- Оптимизированный поиск зомби только на арене
 task.spawn(function()
     while task.wait(1.5) do
         pcall(function()
             if zombieESP then
-                for _, obj in pairs(workspace:GetDescendants()) do
-                    if obj:IsA("Humanoid") and obj.Parent and obj.Parent ~= LocalPlayer.Character then
-                        local model = obj.Parent
-                        if not Players:GetPlayerFromCharacter(model) and model:FindFirstChild("Head") then
-                            applyVisualESP(model.Head, Color3.fromRGB(255, 0, 0), "ZOMBIE")
+                for _, obj in pairs(workspace:GetChildren()) do
+                    if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj ~= LocalPlayer.Character then
+                        if not Players:GetPlayerFromCharacter(obj) and obj:FindFirstChild("Head") and obj.Humanoid.Health > 0 then
+                            applyVisualESP(obj, Color3.fromRGB(255, 0, 0), "ZOMBIE")
                         end
                     end
                 end
@@ -181,19 +181,21 @@ task.spawn(function()
     end
 end)
 
+-- Строгий поиск предметов без перегрузки процессора
 task.spawn(function()
-    while task.wait(2.5) do
+    while task.wait(3) do
         pcall(function()
             if worldESP or partsESP then
                 for _, obj in pairs(workspace:GetDescendants()) do
-                    local name = string.lower(obj.Name)
-                    if obj:IsA("Model") or obj:IsA("BasePart") then
-                        if worldESP and (string.find(name, "revive") or string.find(name, "jugg") or string.find(name, "perk") or string.find(name, "speed") or string.find(name, "cola") or obj:FindFirstChild("PackAPunch")) then
-                            applyVisualESP(obj, Color3.fromRGB(0, 255, 0), "Perk Machine")
-                        elseif worldESP and (string.find(name, "box") or string.find(name, "mystery") or string.find(name, "chest")) then
-                            applyVisualESP(obj, Color3.fromRGB(255, 255, 0), "Mystery Box")
-                        elseif partsESP and (string.find(name, "part") or string.find(name, "craft") or string.find(name, "item") or string.find(name, "component")) then
-                            if not obj:FindFirstChild("Lava") and not string.find(name, "wall") and not string.find(name, "floor") then
+                    if obj:IsA("Model") then
+                        local name = string.lower(obj.Name)
+                        -- Полный игнор мусорных текстур карты
+                        if not string.find(name, "part") and not string.find(name, "wall") and not string.find(name, "floor") and not string.find(name, "map") and not string.find(name, "lava") and not string.find(name, "leaf") then
+                            if worldESP and (string.find(name, "mystery") or name == "box" or name == "chest") then
+                                applyVisualESP(obj, Color3.fromRGB(255, 255, 0), "Mystery Box")
+                            elseif worldESP and (string.find(name, "revive") or string.find(name, "jugg") or string.find(name, "perk") or string.find(name, "speed") or string.find(name, "cola")) then
+                                applyVisualESP(obj, Color3.fromRGB(0, 255, 0), "Perk Machine")
+                            elseif partsESP and (string.find(name, "craft") or name == "component" or name == "item") then
                                 applyVisualESP(obj, Color3.fromRGB(0, 255, 255), "Craft Part")
                             end
                         end
