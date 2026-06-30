@@ -123,19 +123,6 @@ LogLabel.Text = "Log: waiting..."
 LogLabel.TextWrapped = true
 LogLabel.Parent = Frame
 
-local ListEventsBtn = Instance.new("TextButton")
-ListEventsBtn.Size = UDim2.new(1, -30, 0, 30)
-ListEventsBtn.Position = UDim2.new(0, 15, 0, 255)
-ListEventsBtn.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
-ListEventsBtn.TextColor3 = Color3.fromRGB(255, 150, 150)
-ListEventsBtn.Text = "List Events"
-ListEventsBtn.Font = Enum.Font.GothamBold
-ListEventsBtn.TextSize = 13
-ListEventsBtn.Parent = Frame
-Instance.new("UICorner", ListEventsBtn).CornerRadius = UDim.new(0, 4)
-Instance.new("UIStroke", ListEventsBtn).Color = Color3.fromRGB(200, 0, 0)
-ListEventsBtn.UIStroke.Thickness = 1.5
-
 local killauraActive = false
 local logFrozen = false
 
@@ -147,7 +134,7 @@ AuraBtn.MouseButton1Click:Connect(function()
         AuraBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
         AuraBtn.UIStroke.Color = Color3.fromRGB(0, 200, 0)
         AuraBtn.Text = "KILL AURA : ENABLED"
-        LogLabel.Text = "Aura ON, searching..."
+        LogLabel.Text = "Aura ON, testing Hit_Object..."
     else
         AuraBtn.BackgroundColor3 = Color3.fromRGB(35, 5, 5)
         AuraBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
@@ -155,48 +142,6 @@ AuraBtn.MouseButton1Click:Connect(function()
         AuraBtn.Text = "KILL AURA : DISABLED"
         LogLabel.Text = "Log: waiting..."
     end
-end)
-
-local function findRelevantEvents()
-    local keywords = {"damage", "hit", "knife", "swing", "slash", "attack", "melee", "zombie", "weapon", "deal"}
-    local relevant = {}
-    local places = {
-        {Lighting, "Lighting"},
-        {ReplicatedStorage, "ReplicatedStorage"},
-        {workspace, "Workspace"}
-    }
-    for _, place in ipairs(places) do
-        for _, obj in pairs(place[1]:GetDescendants()) do
-            if obj:IsA("RemoteEvent") then
-                local lowerName = obj.Name:lower()
-                for _, kw in ipairs(keywords) do
-                    if lowerName:find(kw) then
-                        table.insert(relevant, place[2] .. "/" .. obj.Name)
-                        break
-                    end
-                end
-            end
-        end
-    end
-    return relevant
-end
-
-ListEventsBtn.MouseButton1Click:Connect(function()
-    local events = findRelevantEvents()
-    local logText
-    if #events == 0 then
-        logText = "No damage-related events found!"
-    else
-        logText = "Relevant events (" .. #events .. "):\n"
-        for i = 1, math.min(#events, 10) do
-            logText = logText .. i .. ". " .. events[i] .. "\n"
-        end
-        if #events > 10 then
-            logText = logText .. "... and " .. (#events - 10) .. " more"
-        end
-    end
-    LogLabel.Text = logText
-    logFrozen = true
 end)
 
 task.spawn(function()
@@ -240,30 +185,18 @@ task.spawn(function()
             logText = "Found: " .. #zombies .. " | " .. table.concat(zombieNames, ", ") .. "\n"
 
             local success, err = pcall(function()
-                local v3
-                if typeof(vector) == "table" and vector.create then
-                    v3 = vector.create(0, 0, 0)
-                else
-                    v3 = {x = 0, y = 0, z = 0}
-                end
                 for _, zombie in pairs(zombies) do
-                    Lighting.ETC:FireServer({
-                        zombie.Humanoid,
-                        math.huge,
-                        "Damage\240\159\144\153",
-                        false,
-                        false,
-                        false,
-                        [8] = v3,
-                        [9] = { HitS = 1, ConfirmedHit = 1 }
-                    })
+                    local hrp = zombie:FindFirstChild("HumanoidRootPart") or zombie:FindFirstChild("Torso") or zombie:FindFirstChild("Head")
+                    if hrp then
+                        Lighting.Hit_Object:FireServer(hrp, zombie.Humanoid, 9e9, "Knife")
+                    end
                 end
             end)
 
             if not success then
-                logText = logText .. "ETC error: " .. tostring(err)
+                logText = logText .. "Hit_Object error: " .. tostring(err)
             else
-                logText = logText .. "ETC sent (no effect?)"
+                logText = logText .. "Hit_Object sent!"
             end
 
             LogLabel.Text = logText
