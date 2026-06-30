@@ -2,24 +2,29 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Gemini Hub";
-        Text = "V4 Balanced Engine!";
+        Text = "V5 2D-Box Engine Loaded!";
         Duration = 4;
     })
 end)
 
-local function applyBoxESP(object, color, text)
-    if not object or object:FindFirstChild("Gemini_Billboard") then return end
+local function applyVisualESP(object, color, text)
+    if not object or object:FindFirstChild("Gemini_ESP_Root") then return end
     
+    local root = Instance.new("Folder")
+    root.Name = "Gemini_ESP_Root"
+    root.Parent = object
+
     local bbg = Instance.new("BillboardGui")
     bbg.Name = "Gemini_Billboard"
     bbg.Size = UDim2.new(0, 140, 0, 30)
     bbg.AlwaysOnTop = true
     bbg.StudsOffset = Vector3.new(0, 3, 0)
-    bbg.Parent = object
+    bbg.Parent = root
 
     local txt = Instance.new("TextLabel")
     txt.Size = UDim2.new(1, 0, 1, 0)
@@ -31,33 +36,47 @@ local function applyBoxESP(object, color, text)
     txt.TextStrokeTransparency = 0
     txt.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
     txt.Parent = bbg
+
+    local boxBbg = Instance.new("BillboardGui")
+    boxBbg.Name = "Gemini_Box"
+    boxBbg.Size = UDim2.new(4, 0, 5, 0)
+    boxBbg.AlwaysOnTop = true
+    boxBbg.Parent = root
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundTransparency = 1
+    frame.BorderColor3 = color
+    frame.BorderSizePixel = 2
+    frame.Parent = boxBbg
 end
 
 task.spawn(function()
-    while task.wait(1.5) do
+    while task.wait(1) do
         pcall(function()
-            -- 1. Сверхточный поиск Зомби
-            for _, obj in pairs(workspace:GetChildren()) do
+            for _, obj in pairs(game:GetDescendants()) do
                 if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj ~= LocalPlayer.Character then
-                    if not Players:GetPlayerFromCharacter(obj) and obj:FindFirstChild("Head") then
-                        applyBoxESP(obj.Head, Color3.fromRGB(255, 0, 0), "ZOMBIE")
+                    local name = string.lower(obj.Name)
+                    if not Players:GetPlayerFromCharacter(obj) and (string.find(name, "zombie") or string.find(name, "walker") or string.find(name, "undead") or obj:FindFirstChild("Head")) then
+                        local targetPart = obj:FindFirstChild("Head") or obj:FindFirstChild("HumanoidRootPart")
+                        if targetPart then
+                            applyVisualESP(targetPart, Color3.fromRGB(255, 0, 0), "ZOMBIE")
+                        end
                     end
                 end
             end
 
-            -- 2. Умное сканирование только КРУПНЫХ объектов (минуя кирпичи стен)
             for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("Model") then
+                if obj:IsA("Model") or obj:IsA("BasePart") then
                     local name = string.lower(obj.Name)
                     
                     if string.find(name, "mystery") or name == "box" or name == "chest" then
-                        applyBoxESP(obj, Color3.fromRGB(255, 255, 0), "Mystery Box")
+                        applyVisualESP(obj, Color3.fromRGB(255, 255, 0), "Mystery Box")
                     elseif string.find(name, "perk") or string.find(name, "revive") or string.find(name, "jugg") or string.find(name, "speed") or string.find(name, "cola") then
-                        applyBoxESP(obj, Color3.fromRGB(0, 255, 0), "Perk Machine")
+                        applyVisualESP(obj, Color3.fromRGB(0, 255, 0), "Perk Machine")
                     elseif string.find(name, "craft") or string.find(name, "part") or string.find(name, "component") then
-                        -- Игнорируем блоки лавы и стен, ищем только уникальные детали
-                        if not obj:FindFirstChild("Lava") and not string.find(name, "wall") then
-                            applyBoxESP(obj, Color3.fromRGB(0, 255, 255), "Craft Part")
+                        if not obj:FindFirstChild("Lava") and not string.find(name, "wall") and not obj:IsA("Workspace") then
+                            applyVisualESP(obj, Color3.fromRGB(0, 255, 255), "Craft Part")
                         end
                     end
                 end
@@ -67,16 +86,18 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(0.3) do
         pcall(function()
-            -- Агрессивный перебор всех папок оружия для бесконечных патронов
-            local targetFolder = LocalPlayer.Character or LocalPlayer:FindFirstChild("Backpack")
-            if targetFolder then
-                for _, item in pairs(targetFolder:GetDescendants()) do
-                    if item:IsA("IntValue") or item:IsA("NumberValue") then
-                        local n = string.lower(item.Name)
-                        if string.find(n, "ammo") or string.find(n, "clip") or string.find(n, "mag") or string.find(n, "reserve") then
-                            item.Value = 999
+            local character = LocalPlayer.Character
+            if character then
+                local tool = character:FindFirstChildOfClass("Tool")
+                if tool then
+                    for _, subItem in pairs(tool:GetDescendants()) do
+                        if subItem:IsA("IntValue") or subItem:IsA("NumberValue") then
+                            local lowerName = string.lower(subItem.Name)
+                            if string.find(lowerName, "ammo") or string.find(lowerName, "clip") or string.find(lowerName, "mag") or string.find(lowerName, "reserve") then
+                                subItem.Value = 999
+                            end
                         end
                     end
                 end
