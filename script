@@ -165,13 +165,14 @@ createToggle("Craft Parts ESP", function(val)
 end)
 
 task.spawn(function()
-    while task.wait(2) do
+    while task.wait(1.5) do
         pcall(function()
             if zombieESP then
-                for _, obj in pairs(workspace:GetChildren()) do
-                    if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj ~= LocalPlayer.Character then
-                        if not Players:GetPlayerFromCharacter(obj) and obj:FindFirstChild("Head") then
-                            applyVisualESP(obj.Head, Color3.fromRGB(255, 0, 0), "ZOMBIE")
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if obj:IsA("Humanoid") and obj.Parent and obj.Parent ~= LocalPlayer.Character then
+                        local model = obj.Parent
+                        if not Players:GetPlayerFromCharacter(model) and model:FindFirstChild("Head") then
+                            applyVisualESP(model.Head, Color3.fromRGB(255, 0, 0), "ZOMBIE")
                         end
                     end
                 end
@@ -181,18 +182,18 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-    while task.wait(3) do
+    while task.wait(2.5) do
         pcall(function()
             if worldESP or partsESP then
                 for _, obj in pairs(workspace:GetDescendants()) do
-                    if obj:IsA("Model") then
-                        local name = string.lower(obj.Name)
-                        if not string.find(name, "part") and not string.find(name, "wall") and not string.find(name, "floor") and not string.find(name, "map") and not string.find(name, "lava") then
-                            if worldESP and (string.find(name, "mystery") or name == "box" or name == "chest") then
-                                applyVisualESP(obj, Color3.fromRGB(255, 255, 0), "Mystery Box")
-                            elseif worldESP and (string.find(name, "perk") or string.find(name, "revive") or string.find(name, "jugg") or string.find(name, "speed") or string.find(name, "cola")) then
-                                applyVisualESP(obj, Color3.fromRGB(0, 255, 0), "Perk Machine")
-                            elseif partsESP and (string.find(name, "craft") or name == "component" or name == "item") then
+                    local name = string.lower(obj.Name)
+                    if obj:IsA("Model") or obj:IsA("BasePart") then
+                        if worldESP and (string.find(name, "revive") or string.find(name, "jugg") or string.find(name, "perk") or string.find(name, "speed") or string.find(name, "cola") or obj:FindFirstChild("PackAPunch")) then
+                            applyVisualESP(obj, Color3.fromRGB(0, 255, 0), "Perk Machine")
+                        elseif worldESP and (string.find(name, "box") or string.find(name, "mystery") or string.find(name, "chest")) then
+                            applyVisualESP(obj, Color3.fromRGB(255, 255, 0), "Mystery Box")
+                        elseif partsESP and (string.find(name, "part") or string.find(name, "craft") or string.find(name, "item") or string.find(name, "component")) then
+                            if not obj:FindFirstChild("Lava") and not string.find(name, "wall") and not string.find(name, "floor") then
                                 applyVisualESP(obj, Color3.fromRGB(0, 255, 255), "Craft Part")
                             end
                         end
@@ -217,15 +218,23 @@ ammoCorner.CornerRadius = UDim.new(0, 6)
 ammoCorner.Parent = AmmoBtn
 
 AmmoBtn.MouseButton1Click:Connect(function()
-    local character = LocalPlayer.Character
-    if character then
-        local tool = character:FindFirstChildOfClass("Tool")
-        if tool then
-            for _, subItem in pairs(tool:GetDescendants()) do
-                if subItem:IsA("IntValue") or subItem:IsA("NumberValue") then
-                    local lowerName = string.lower(subItem.Name)
-                    if string.find(lowerName, "ammo") or string.find(lowerName, "clip") or string.find(lowerName, "mag") or string.find(lowerName, "reserve") then
-                        subItem.Value = 999
+    if LocalPlayer:FindFirstChild("Backpack") then
+        for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                for _, v in pairs(tool:GetDescendants()) do
+                    if v:IsA("ValueBase") and (string.find(string.lower(v.Name), "ammo") or string.find(string.lower(v.Name), "clip") or string.find(string.lower(v.Name), "mag") or string.find(string.lower(v.Name), "reserve")) then
+                        v.Value = 999
+                    end
+                end
+            end
+        end
+    end
+    if LocalPlayer.Character then
+        for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
+            if tool:IsA("Tool") then
+                for _, v in pairs(tool:GetDescendants()) do
+                    if v:IsA("ValueBase") and (string.find(string.lower(v.Name), "ammo") or string.find(string.lower(v.Name), "clip") or string.find(string.lower(v.Name), "mag") or string.find(string.lower(v.Name), "reserve")) then
+                        v.Value = 999
                     end
                 end
             end
