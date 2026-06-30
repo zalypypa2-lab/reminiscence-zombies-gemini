@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
 local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
 
 if not PlayerGui then return end
 
@@ -158,24 +159,66 @@ AuraBtn.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.1) do
+    while task.wait(0.15) do
         if killauraActive then
-            pcall(function()
-                for _, v in pairs(workspace.Zombies:GetChildren()) do
-                    if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                        game:GetService("Lighting").ETC:FireServer({
-                            v.Humanoid,
-                            math.huge,
-                            "Damage\240\159\144\153",
-                            false,
-                            false,
-                            false,
-                            [8] = Vector3.new(0, 0, 0),
-                            [9] = { HitS = 1, ConfirmedHit = 1 }
-                        })
+            local zombiesFound = 0
+            local success, err = pcall(function()
+                -- Ищем папку Zombies
+                local zombiesFolder = workspace:FindFirstChild("Zombies")
+                if not zombiesFolder then
+                    -- Попробуем найти папку, содержащую зомби
+                    for _, obj in pairs(workspace:GetChildren()) do
+                        if obj:IsA("Folder") or obj:IsA("Model") then
+                            local testZombie = obj:FindFirstChildWhichIsA("Model")
+                            if testZombie and testZombie:FindFirstChild("Humanoid") then
+                                zombiesFolder = obj
+                                break
+                            end
+                        end
+                    end
+                end
+                
+                if zombiesFolder then
+                    for _, v in pairs(zombiesFolder:GetChildren()) do
+                        if v:IsA("Model") then
+                            local hum = v:FindFirstChild("Humanoid")
+                            if hum and hum.Health > 0 then
+                                zombiesFound = zombiesFound + 1
+                                game:GetService("Lighting").ETC:FireServer({
+                                    hum,
+                                    math.huge,
+                                    "Damage\240\159\144\153",
+                                    false,
+                                    false,
+                                    false,
+                                    [8] = Vector3.new(0, 0, 0),
+                                    [9] = { HitS = 1, ConfirmedHit = 1 }
+                                })
+                            end
+                        end
                     end
                 end
             end)
+            
+            if not success then
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Aura Error",
+                    Text = tostring(err),
+                    Duration = 2
+                })
+            elseif zombiesFound == 0 then
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Aura",
+                    Text = "No zombies found",
+                    Duration = 1.5
+                })
+            else
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Aura",
+                    Text = "Attacked " .. zombiesFound .. " zombies",
+                    Duration = 1
+                })
+            end
         end
     end
 end)
