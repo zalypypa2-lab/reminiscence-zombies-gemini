@@ -2,15 +2,105 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
 
-pcall(function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Gemini Hub";
-        Text = "V5 2D-Box Engine Loaded!";
-        Duration = 4;
-    })
+if PlayerGui:FindFirstChild("GeminiHubMobile") then
+    PlayerGui.GeminiHubMobile:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "GeminiHubMobile"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 100, 0, 35)
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
+ToggleBtn.Text = "Gemini Hub"
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.TextSize = 16
+ToggleBtn.Parent = ScreenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = ToggleBtn
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 340, 0, 260)
+Frame.Position = UDim2.new(0.3, 0, 0.2, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.Visible = true
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 12)
+frameCorner.Parent = Frame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.Text = "Reminiscence Zombies | Gemini Hub"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+Title.Font = Enum.Font.SourceSansBold
+Title.Parent = Frame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = Title
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    Frame.Visible = not Frame.Visible
 end)
+
+local Scroll = Instance.new("ScrollingFrame")
+Scroll.Size = UDim2.new(1, -20, 1, -50)
+Scroll.Position = UDim2.new(0, 10, 0, 45)
+Scroll.BackgroundTransparency = 1
+Scroll.CanvasSize = UDim2.new(0, 0, 0, 350)
+Scroll.ScrollBarThickness = 4
+Scroll.Parent = Frame
+
+local Layout = Instance.new("UIListLayout")
+Layout.Padding = UDim.new(0, 8)
+Layout.Parent = Scroll
+
+local zombieESP, worldESP, partsESP = false, false, false
+local createdESPElements = {}
+
+local function createToggle(name, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.TextColor3 = Color3.fromRGB(255, 80, 80)
+    btn.Text = name .. " : OFF"
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 14
+    btn.Parent = Scroll
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
+
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        if state then
+            btn.BackgroundColor3 = Color3.fromRGB(40, 60, 40)
+            btn.TextColor3 = Color3.fromRGB(80, 255, 80)
+            btn.Text = name .. " : ON"
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            btn.TextColor3 = Color3.fromRGB(255, 80, 80)
+            btn.Text = name .. " : OFF"
+        end
+        callback(state)
+    end)
+end
 
 local function applyVisualESP(object, color, text)
     if not object or object:FindFirstChild("Gemini_ESP_Root") then return end
@@ -18,6 +108,7 @@ local function applyVisualESP(object, color, text)
     local root = Instance.new("Folder")
     root.Name = "Gemini_ESP_Root"
     root.Parent = object
+    table.insert(createdESPElements, root)
 
     local bbg = Instance.new("BillboardGui")
     bbg.Name = "Gemini_Billboard"
@@ -39,7 +130,7 @@ local function applyVisualESP(object, color, text)
 
     local boxBbg = Instance.new("BillboardGui")
     boxBbg.Name = "Gemini_Box"
-    boxBbg.Size = UDim2.new(4, 0, 5, 0)
+    boxBbg.Size = UDim2.new(3, 0, 4, 0)
     boxBbg.AlwaysOnTop = true
     boxBbg.Parent = root
 
@@ -51,32 +142,36 @@ local function applyVisualESP(object, color, text)
     frame.Parent = boxBbg
 end
 
-task.spawn(function()
-    while task.wait(1) do
-        pcall(function()
-            for _, obj in pairs(game:GetDescendants()) do
-                if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj ~= LocalPlayer.Character then
-                    local name = string.lower(obj.Name)
-                    if not Players:GetPlayerFromCharacter(obj) and (string.find(name, "zombie") or string.find(name, "walker") or string.find(name, "undead") or obj:FindFirstChild("Head")) then
-                        local targetPart = obj:FindFirstChild("Head") or obj:FindFirstChild("HumanoidRootPart")
-                        if targetPart then
-                            applyVisualESP(targetPart, Color3.fromRGB(255, 0, 0), "ZOMBIE")
-                        end
-                    end
-                end
-            end
+local function clearESP()
+    for _, el in pairs(createdESPElements) do
+        if el and el.Parent then pcall(function() el:Destroy() end) end
+    end
+    table.clear(createdESPElements)
+end
 
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("Model") or obj:IsA("BasePart") then
-                    local name = string.lower(obj.Name)
-                    
-                    if string.find(name, "mystery") or name == "box" or name == "chest" then
-                        applyVisualESP(obj, Color3.fromRGB(255, 255, 0), "Mystery Box")
-                    elseif string.find(name, "perk") or string.find(name, "revive") or string.find(name, "jugg") or string.find(name, "speed") or string.find(name, "cola") then
-                        applyVisualESP(obj, Color3.fromRGB(0, 255, 0), "Perk Machine")
-                    elseif string.find(name, "craft") or string.find(name, "part") or string.find(name, "component") then
-                        if not obj:FindFirstChild("Lava") and not string.find(name, "wall") and not obj:IsA("Workspace") then
-                            applyVisualESP(obj, Color3.fromRGB(0, 255, 255), "Craft Part")
+createToggle("Zombie ESP", function(val)
+    zombieESP = val
+    if not zombieESP then clearESP() end
+end)
+
+createToggle("Perks & Box ESP", function(val)
+    worldESP = val
+    if not worldESP then clearESP() end
+end)
+
+createToggle("Craft Parts ESP", function(val)
+    partsESP = val
+    if not partsESP then clearESP() end
+end)
+
+task.spawn(function()
+    while task.wait(2) do
+        pcall(function()
+            if zombieESP then
+                for _, obj in pairs(workspace:GetChildren()) do
+                    if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj ~= LocalPlayer.Character then
+                        if not Players:GetPlayerFromCharacter(obj) and obj:FindFirstChild("Head") then
+                            applyVisualESP(obj.Head, Color3.fromRGB(255, 0, 0), "ZOMBIE")
                         end
                     end
                 end
@@ -86,22 +181,54 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.3) do
+    while task.wait(3) do
         pcall(function()
-            local character = LocalPlayer.Character
-            if character then
-                local tool = character:FindFirstChildOfClass("Tool")
-                if tool then
-                    for _, subItem in pairs(tool:GetDescendants()) do
-                        if subItem:IsA("IntValue") or subItem:IsA("NumberValue") then
-                            local lowerName = string.lower(subItem.Name)
-                            if string.find(lowerName, "ammo") or string.find(lowerName, "clip") or string.find(lowerName, "mag") or string.find(lowerName, "reserve") then
-                                subItem.Value = 999
+            if worldESP or partsESP then
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if obj:IsA("Model") then
+                        local name = string.lower(obj.Name)
+                        if not string.find(name, "part") and not string.find(name, "wall") and not string.find(name, "floor") and not string.find(name, "map") and not string.find(name, "lava") then
+                            if worldESP and (string.find(name, "mystery") or name == "box" or name == "chest") then
+                                applyVisualESP(obj, Color3.fromRGB(255, 255, 0), "Mystery Box")
+                            elseif worldESP and (string.find(name, "perk") or string.find(name, "revive") or string.find(name, "jugg") or string.find(name, "speed") or string.find(name, "cola")) then
+                                applyVisualESP(obj, Color3.fromRGB(0, 255, 0), "Perk Machine")
+                            elseif partsESP and (string.find(name, "craft") or name == "component" or name == "item") then
+                                applyVisualESP(obj, Color3.fromRGB(0, 255, 255), "Craft Part")
                             end
                         end
                     end
                 end
             end
         end)
+    end
+end)
+
+local AmmoBtn = Instance.new("TextButton")
+AmmoBtn.Size = UDim2.new(1, 0, 0, 35)
+AmmoBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+AmmoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AmmoBtn.Text = "Give Inf Ammo (Hold weapon)"
+AmmoBtn.Font = Enum.Font.SourceSansBold
+AmmoBtn.TextSize = 14
+AmmoBtn.Parent = Scroll
+
+local ammoCorner = Instance.new("UICorner")
+ammoCorner.CornerRadius = UDim.new(0, 6)
+ammoCorner.Parent = AmmoBtn
+
+AmmoBtn.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if character then
+        local tool = character:FindFirstChildOfClass("Tool")
+        if tool then
+            for _, subItem in pairs(tool:GetDescendants()) do
+                if subItem:IsA("IntValue") or subItem:IsA("NumberValue") then
+                    local lowerName = string.lower(subItem.Name)
+                    if string.find(lowerName, "ammo") or string.find(lowerName, "clip") or string.find(lowerName, "mag") or string.find(lowerName, "reserve") then
+                        subItem.Value = 999
+                    end
+                end
+            end
+        end
     end
 end)
