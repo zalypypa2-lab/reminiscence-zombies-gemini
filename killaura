@@ -137,9 +137,11 @@ Instance.new("UIStroke", ListEventsBtn).Color = Color3.fromRGB(200, 0, 0)
 ListEventsBtn.UIStroke.Thickness = 1.5
 
 local killauraActive = false
+local logFrozen = false
 
 AuraBtn.MouseButton1Click:Connect(function()
     killauraActive = not killauraActive
+    logFrozen = false
     if killauraActive then
         AuraBtn.BackgroundColor3 = Color3.fromRGB(50, 5, 5)
         AuraBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
@@ -155,8 +157,9 @@ AuraBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-local function findAllRemoteEvents()
-    local events = {}
+local function findRelevantEvents()
+    local keywords = {"damage", "hit", "knife", "swing", "slash", "attack", "melee", "zombie", "weapon", "deal"}
+    local relevant = {}
     local places = {
         {Lighting, "Lighting"},
         {ReplicatedStorage, "ReplicatedStorage"},
@@ -165,32 +168,40 @@ local function findAllRemoteEvents()
     for _, place in ipairs(places) do
         for _, obj in pairs(place[1]:GetDescendants()) do
             if obj:IsA("RemoteEvent") then
-                table.insert(events, place[2] .. "/" .. obj.Name)
+                local lowerName = obj.Name:lower()
+                for _, kw in ipairs(keywords) do
+                    if lowerName:find(kw) then
+                        table.insert(relevant, place[2] .. "/" .. obj.Name)
+                        break
+                    end
+                end
             end
         end
     end
-    return events
+    return relevant
 end
 
 ListEventsBtn.MouseButton1Click:Connect(function()
-    local events = findAllRemoteEvents()
-    local logText = "RemoteEvents found: " .. #events .. "\n"
-    if #events > 0 then
-        for i = 1, math.min(15, #events) do
+    local events = findRelevantEvents()
+    local logText
+    if #events == 0 then
+        logText = "No damage-related events found!"
+    else
+        logText = "Relevant events (" .. #events .. "):\n"
+        for i = 1, math.min(#events, 10) do
             logText = logText .. i .. ". " .. events[i] .. "\n"
         end
-        if #events > 15 then
-            logText = logText .. "... and " .. (#events - 15) .. " more"
+        if #events > 10 then
+            logText = logText .. "... and " .. (#events - 10) .. " more"
         end
-    else
-        logText = logText .. "None!"
     end
     LogLabel.Text = logText
+    logFrozen = true
 end)
 
 task.spawn(function()
     while task.wait(0.2) do
-        if killauraActive then
+        if killauraActive and not logFrozen then
             local zombies = {}
             local zombieNames = {}
             local logText = ""
