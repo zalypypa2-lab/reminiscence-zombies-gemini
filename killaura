@@ -1,0 +1,156 @@
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+local UserInputService = game:GetService("UserInputService")
+
+if not PlayerGui then
+    return
+end
+
+if PlayerGui:FindFirstChild("GeminiKillAuraMobile") then
+    PlayerGui.GeminiKillAuraMobile:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "GeminiKillAuraMobile"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 100, 0, 35)
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
+ToggleBtn.Text = "Aura Menu"
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.TextSize = 16
+ToggleBtn.Parent = ScreenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = ToggleBtn
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 300, 0, 150)
+Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.Visible = true
+Frame.Active = true
+Frame.Parent = ScreenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 12)
+frameCorner.Parent = Frame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.Text = "Knife KillAura | Gemini"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+Title.Font = Enum.Font.SourceSansBold
+Title.Parent = Frame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = Title
+
+local dragging, dragInput, dragStart, startPos
+local changedConnection
+
+local function update(input)
+    local delta = input.Position - dragStart
+    Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+        
+        if changedConnection then changedConnection:Disconnect() end
+        changedConnection = input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then 
+                dragging = false 
+                if changedConnection then
+                    changedConnection:Disconnect()
+                    changedConnection = nil
+                end
+            end
+        end)
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then update(input) end
+end)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    Frame.Visible = not Frame.Visible
+end)
+
+local AuraBtn = Instance.new("TextButton")
+AuraBtn.Size = UDim2.new(1, -40, 0, 50)
+AuraBtn.Position = UDim2.new(0, 20, 0, 65)
+AuraBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+AuraBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+AuraBtn.Text = "KillAura : OFF"
+AuraBtn.Font = Enum.Font.SourceSansBold
+AuraBtn.TextSize = 18
+AuraBtn.Parent = Frame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 8)
+btnCorner.Parent = AuraBtn
+
+local killauraActive = false
+
+AuraBtn.MouseButton1Click:Connect(function()
+    killauraActive = not killauraActive
+    if killauraActive then
+        AuraBtn.BackgroundColor3 = Color3.fromRGB(40, 60, 40)
+        AuraBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
+        AuraBtn.Text = "KillAura : ON"
+    else
+        AuraBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        AuraBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+        AuraBtn.Text = "KillAura : OFF"
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if killauraActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local myHrp = LocalPlayer.Character.HumanoidRootPart
+            local knife = LocalPlayer.Character:FindFirstChild("Knife") or LocalPlayer.Character:FindFirstChild("Combat Knife") or LocalPlayer.Character:FindFirstChildOfClass("Tool")
+            
+            if knife and knife:FindFirstChild("Handle") then
+                pcall(function()
+                    for _, obj in pairs(workspace:GetChildren()) do
+                        if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") and obj ~= LocalPlayer.Character then
+                            if obj.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(obj) then
+                                local zHrp = obj.HumanoidRootPart
+                                local dist = (myHrp.Position - zHrp.Position).Magnitude
+                                
+                                if dist <= 15 then
+                                    firetouchinterest(knife.Handle, zHrp, 0)
+                                    task.wait()
+                                    firetouchinterest(knife.Handle, zHrp, 1)
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end
+end)
