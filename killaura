@@ -130,7 +130,7 @@ AuraBtn.MouseButton1Click:Connect(function()
         AuraBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
         AuraBtn.UIStroke.Color = Color3.fromRGB(0, 200, 0)
         AuraBtn.Text = "KILL AURA : ENABLED"
-        LogLabel.Text = "Brute force mode..."
+        LogLabel.Text = "Full destroy mode..."
     else
         AuraBtn.BackgroundColor3 = Color3.fromRGB(35, 5, 5)
         AuraBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
@@ -140,23 +140,43 @@ AuraBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+local function fullDestroy(model)
+    for _, child in ipairs(model:GetDescendants()) do
+        if child:IsA("BasePart") then
+            child:Destroy()
+        elseif child:IsA("Humanoid") then
+            child.Health = 0
+            child:Destroy()
+        elseif child:IsA("Model") then
+            fullDestroy(child)
+        end
+    end
+    model:Destroy()
+end
+
 task.spawn(function()
-    while task.wait(0.1) do
+    while task.wait(0.15) do
         if killauraActive then
             local count = 0
+            local zombies = {}
+
             for _, obj in pairs(workspace:GetDescendants()) do
                 if obj:IsA("Model") then
                     local hum = obj:FindFirstChild("Humanoid")
                     if hum and hum.Health > 0 and not Players:GetPlayerFromCharacter(obj) then
-                        pcall(function()
-                            hum.Health = 0
-                            obj:BreakJoints()
-                        end)
-                        count = count + 1
+                        table.insert(zombies, obj)
                     end
                 end
             end
-            LogLabel.Text = count > 0 and "Killed " .. count .. " zombies" or "No zombies found"
+
+            for _, zombie in ipairs(zombies) do
+                pcall(function()
+                    fullDestroy(zombie)
+                end)
+                count = count + 1
+            end
+
+            LogLabel.Text = count > 0 and "Destroyed " .. count .. " zombies" or "No zombies found"
         end
     end
 end)
