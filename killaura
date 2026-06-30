@@ -130,7 +130,7 @@ AuraBtn.MouseButton1Click:Connect(function()
         AuraBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
         AuraBtn.UIStroke.Color = Color3.fromRGB(0, 200, 0)
         AuraBtn.Text = "KILL AURA : ENABLED"
-        LogLabel.Text = "Full destroy mode..."
+        LogLabel.Text = "Full destroy + hitbox scan..."
     else
         AuraBtn.BackgroundColor3 = Color3.fromRGB(35, 5, 5)
         AuraBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
@@ -154,10 +154,19 @@ local function fullDestroy(model)
     model:Destroy()
 end
 
+local function isHitbox(part)
+    if not part:IsA("BasePart") then return false end
+    if part.Transparency > 0.8 or part.Name:lower():find("hitbox") or part.Name:lower():find("damage") then
+        return true
+    end
+    return false
+end
+
 task.spawn(function()
-    while task.wait(0.15) do
+    while task.wait(0.2) do
         if killauraActive then
-            local count = 0
+            local destroyedCount = 0
+            local hitboxCount = 0
             local zombies = {}
 
             for _, obj in pairs(workspace:GetDescendants()) do
@@ -173,10 +182,23 @@ task.spawn(function()
                 pcall(function()
                     fullDestroy(zombie)
                 end)
-                count = count + 1
+                destroyedCount = destroyedCount + 1
             end
 
-            LogLabel.Text = count > 0 and "Destroyed " .. count .. " zombies" or "No zombies found"
+            local allParts = workspace:GetDescendants()
+            for _, obj in ipairs(allParts) do
+                if obj:IsA("BasePart") then
+                    local parentModel = obj:FindFirstAncestorOfClass("Model")
+                    if not parentModel and isHitbox(obj) then
+                        pcall(function()
+                            obj:Destroy()
+                            hitboxCount = hitboxCount + 1
+                        end)
+                    end
+                end
+            end
+
+            LogLabel.Text = string.format("Destroyed %d zombies\nRemoved %d hitboxes", destroyedCount, hitboxCount)
         end
     end
 end)
