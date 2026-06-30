@@ -5,57 +5,80 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
 local UserInputService = game:GetService("UserInputService")
 
-if not PlayerGui then
-    return
-end
+if not PlayerGui then return end
 
-if PlayerGui:FindFirstChild("GeminiKillAuraMobile") then
-    PlayerGui.GeminiKillAuraMobile:Destroy()
+if PlayerGui:FindFirstChild("GeminiAuraPremium") then
+    PlayerGui.GeminiAuraPremium:Destroy()
 end
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "GeminiKillAuraMobile"
+ScreenGui.Name = "GeminiAuraPremium"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 999999
 
 local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0, 100, 0, 35)
+ToggleBtn.Size = UDim2.new(0, 110, 0, 35)
 ToggleBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
-ToggleBtn.Text = "Aura Menu"
-ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.TextSize = 16
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+ToggleBtn.TextColor3 = Color3.fromRGB(180, 100, 255)
+ToggleBtn.Text = "★ Gemini Aura"
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 14
 ToggleBtn.Parent = ScreenGui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 8)
-corner.Parent = ToggleBtn
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 6)
+toggleCorner.Parent = ToggleBtn
+
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Color = Color3.fromRGB(140, 80, 220)
+toggleStroke.Thickness = 1.5
+toggleStroke.Parent = ToggleBtn
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 300, 0, 150)
-Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.Size = UDim2.new(0, 280, 0, 160)
+Frame.Position = UDim2.new(0.35, 0, 0.35, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
 Frame.Visible = true
 Frame.Active = true
 Frame.Parent = ScreenGui
 
 local frameCorner = Instance.new("UICorner")
-frameCorner.CornerRadius = UDim.new(0, 12)
+frameCorner.CornerRadius = UDim.new(0, 10)
 frameCorner.Parent = Frame
 
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Title.Text = "Knife KillAura | Gemini"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 16
-Title.Font = Enum.Font.SourceSansBold
-Title.Parent = Frame
+local frameStroke = Instance.new("UIStroke")
+frameStroke.Color = Color3.fromRGB(40, 35, 50)
+frameStroke.Thickness = 2
+frameStroke.Parent = Frame
 
-local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 12)
-titleCorner.Parent = Title
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 38)
+TopBar.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+TopBar.Parent = Frame
+
+local topBarCorner = Instance.new("UICorner")
+topBarCorner.CornerRadius = UDim.new(0, 10)
+topBarCorner.Parent = TopBar
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -20, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "GEMINI AURA V4"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+local Glow = Instance.new("Frame")
+Glow.Size = UDim2.new(1, 0, 0, 2)
+Glow.Position = UDim2.new(0, 0, 1, -2)
+Glow.BackgroundColor3 = Color3.fromRGB(140, 80, 220)
+Glow.BorderSizePixel = 0
+Glow.Parent = TopBar
 
 local dragging, dragInput, dragStart, startPos
 local changedConnection
@@ -99,57 +122,115 @@ ToggleBtn.MouseButton1Click:Connect(function()
 end)
 
 local AuraBtn = Instance.new("TextButton")
-AuraBtn.Size = UDim2.new(1, -40, 0, 50)
-AuraBtn.Position = UDim2.new(0, 20, 0, 65)
-AuraBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-AuraBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-AuraBtn.Text = "KillAura : OFF"
-AuraBtn.Font = Enum.Font.SourceSansBold
-AuraBtn.TextSize = 18
+AuraBtn.Size = UDim2.new(1, -30, 0, 45)
+AuraBtn.Position = UDim2.new(0, 15, 0, 65)
+AuraBtn.BackgroundColor3 = Color3.fromRGB(20, 15, 15)
+AuraBtn.TextColor3 = Color3.fromRGB(255, 70, 70)
+AuraBtn.Text = "KILL AURA : DISABLED"
+AuraBtn.Font = Enum.Font.GothamBold
+AuraBtn.TextSize = 13
 AuraBtn.Parent = Frame
 
 local btnCorner = Instance.new("UICorner")
-btnCorner.CornerRadius = UDim.new(0, 8)
+btnCorner.CornerRadius = UDim.new(0, 6)
 btnCorner.Parent = AuraBtn
+
+local btnStroke = Instance.new("UIStroke")
+btnStroke.Color = Color3.fromRGB(60, 30, 30)
+btnStroke.Thickness = 1.5
+btnStroke.Parent = AuraBtn
 
 local killauraActive = false
 
 AuraBtn.MouseButton1Click:Connect(function()
     killauraActive = not killauraActive
     if killauraActive then
-        AuraBtn.BackgroundColor3 = Color3.fromRGB(40, 60, 40)
-        AuraBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
-        AuraBtn.Text = "KillAura : ON"
+        AuraBtn.BackgroundColor3 = Color3.fromRGB(15, 25, 15)
+        AuraBtn.TextColor3 = Color3.fromRGB(70, 255, 70)
+        btnStroke.Color = Color3.fromRGB(30, 60, 30)
+        AuraBtn.Text = "KILL AURA : ENABLED"
     else
-        AuraBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        AuraBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-        AuraBtn.Text = "KillAura : OFF"
+        AuraBtn.BackgroundColor3 = Color3.fromRGB(20, 15, 15)
+        AuraBtn.TextColor3 = Color3.fromRGB(255, 70, 70)
+        btnStroke.Color = Color3.fromRGB(60, 30, 30)
+        AuraBtn.Text = "KILL AURA : DISABLED"
     end
 end)
 
+local function getKnife()
+    if not LocalPlayer.Character then return nil end
+    local weaponNames = {"knife", "sword", "machete", "combat", "blade", "bat", "axe", "crowbar", "katana"}
+    
+    for _, item in pairs(LocalPlayer.Character:GetChildren()) do
+        if item:IsA("Tool") then
+            return item
+        end
+    end
+    
+    for _, item in pairs(workspace:GetDescendants()) do
+        if item:IsA("Tool") and item.Parent == LocalPlayer.Character then
+            return item
+        end
+    end
+    
+    for _, name in pairs(weaponNames) do
+        for _, item in pairs(workspace:GetDescendants()) do
+            if string.find(string.lower(item.Name), name) and item:IsA("Tool") then
+                local character = item:FindFirstAncestorOfClass("Model")
+                if character == LocalPlayer.Character then
+                    return item
+                end
+            end
+        end
+    end
+    return nil
+end
+
 task.spawn(function()
-    while task.wait(0.1) do
-        if killauraActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local myHrp = LocalPlayer.Character.HumanoidRootPart
-            local knife = LocalPlayer.Character:FindFirstChild("Knife") or LocalPlayer.Character:FindFirstChild("Combat Knife") or LocalPlayer.Character:FindFirstChildOfClass("Tool")
+    while task.wait(0.05) do
+        if killauraActive and LocalPlayer.Character then
+            local myHrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local activeWeapon = getKnife()
             
-            if knife and knife:FindFirstChild("Handle") then
-                pcall(function()
-                    for _, obj in pairs(workspace:GetChildren()) do
-                        if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") and obj ~= LocalPlayer.Character then
-                            if obj.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(obj) then
-                                local zHrp = obj.HumanoidRootPart
-                                local dist = (myHrp.Position - zHrp.Position).Magnitude
+            if myHrp and activeWeapon then
+                local attackPart = activeWeapon:FindFirstChild("Handle") or activeWeapon:FindFirstChildWhichIsA("BasePart")
+                if attackPart then
+                    pcall(function()
+                        for _, obj in pairs(workspace:GetChildren()) do
+                            if obj:IsA("Model") and obj ~= LocalPlayer.Character then
+                                local hum = obj:FindFirstChild("Humanoid")
+                                local zHrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")
                                 
-                                if dist <= 15 then
-                                    firetouchinterest(knife.Handle, zHrp, 0)
-                                    task.wait()
-                                    firetouchinterest(knife.Handle, zHrp, 1)
+                                if hum and zHrp and hum.Health > 0 and not Players:GetPlayerFromCharacter(obj) then
+                                    local dist = (myHrp.Position - zHrp.Position).Magnitude
+                                    if dist <= 22 then
+                                        firetouchinterest(attackPart, zHrp, 0)
+                                        firetouchinterest(attackPart, zHrp, 1)
+                                    end
                                 end
                             end
                         end
-                    end
-                end)
+                        
+                        for _, folder in pairs(workspace:GetChildren()) do
+                            if folder:IsA("Folder") or folder:IsA("Model") then
+                                for _, obj in pairs(folder:GetChildren()) do
+                                    if obj:IsA("Model") and obj ~= LocalPlayer.Character then
+                                        local hum = obj:FindFirstChild("Humanoid")
+                                        local zHrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")
+                                        
+                                        if hum and zHrp and hum.Health > 0 and not Players:GetPlayerFromCharacter(obj) then
+                                            local dist = (myHrp.Position - zHrp.Position).Magnitude
+                                            if dist <= 22 then
+                                                firetouchinterest(attackPart, zHrp, 0)
+                                                firetouchinterest(attackPart, zHrp, 1)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                end
             end
         end
     end
